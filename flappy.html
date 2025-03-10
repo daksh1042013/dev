@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: lightblue;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = 800;
+        canvas.height = 500;
+
+        let bird = { x: 50, y: 250, radius: 15, velocityY: 0, gravity: 1 };
+        let score = 0;
+        let obstacles = [];
+        let gameRunning = false;
+
+        function createObstacles() {
+            for (let i = 0; i < 50; i++) {
+                let gap = 120;
+                let minHeight = 50;
+                let maxHeight = canvas.height - gap - minHeight;
+                let height = Math.floor(Math.random() * (maxHeight - minHeight) + minHeight);
+                let x = i * 200 + 400;
+                obstacles.push({ x: x, y: 0, width: 40, height: height });
+                obstacles.push({ x: x, y: height + gap, width: 40, height: canvas.height - height - gap });
+            }
+        }
+        createObstacles();
+
+        function update() {
+            if (!gameRunning) return;
+            bird.y += bird.gravity;
+
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= 2;
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    i--;
+                }
+            }
+
+            if (obstacles.length > 0 && obstacles[0].x + obstacles[0].width < bird.x - bird.radius) {
+                score += 10;
+                obstacles.shift();
+                obstacles.shift();
+            }
+
+            if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+                gameOver();
+            }
+
+            for (let obstacle of obstacles) {
+                if (bird.x + bird.radius > obstacle.x && bird.x - bird.radius < obstacle.x + obstacle.width &&
+                    bird.y + bird.radius > obstacle.y && bird.y - bird.radius < obstacle.y + obstacle.height) {
+                    gameOver();
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "yellow";
+            ctx.beginPath();
+            ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.fillStyle = "black";
+            for (let obstacle of obstacles) {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            }
+
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 20, 30);
+
+            if (!gameRunning) {
+                ctx.fillStyle = "red";
+                ctx.font = "40px Arial";
+                ctx.fillText("Press UP Arrow to Start", canvas.width / 2 - 150, canvas.height / 2);
+            }
+        }
+
+        function gameOver() {
+            alert("Game Over!");
+            location.reload();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop();
+
+        window.addEventListener("keydown", function(event) {
+            if (event.code === "ArrowUp") {
+                if (!gameRunning) {
+                    gameRunning = true;
+                }
+                bird.y -= 5;
+            }
+        });
+    </script>
+</body>
+</html>

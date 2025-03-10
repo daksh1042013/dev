@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <style>
+        body {
+            background-color: lightblue;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            margin-top: 50px;
+        }
+
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .choice {
+            width: 150px;
+            height: 150px;
+            background-image: url('rps.jpg'); /* Using uploaded image */
+            background-size: 450px 150px; /* Adjust based on image size */
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        #rock {
+            background-position: -10px 0;
+        }
+
+        #scissors {
+            background-position: -150px 0;
+        }
+
+        #paper {
+            background-position: -280px 0;
+        }
+
+        .choice:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Rock Paper Scissors</h1>
+        <p id="round">Round: 1 / 3</p>
+        <div class="choices">
+            <div class="choice" id="rock"></div>
+            <div class="choice" id="scissors"></div>
+            <div class="choice" id="paper"></div>
+        </div>
+        <p id="result"></p>
+        <canvas id="fireworks"></canvas>
+    </div>
+    <script>
+        const choices = document.querySelectorAll(".choice");
+        const resultText = document.getElementById("result");
+        const roundText = document.getElementById("round");
+
+        let round = 1;
+        let playerWins = 0;
+
+        choices.forEach(choice => {
+            choice.addEventListener("click", () => {
+                if (round <= 3) {
+                    playRound(choice.id);
+                }
+            });
+        });
+
+        function playRound(playerChoice) {
+            const choices = ["rock", "paper", "scissors"];
+            const computerChoice = choices[Math.floor(Math.random() * 3)];
+            
+            if (playerChoice === computerChoice) {
+                resultText.textContent = "It's a tie!";
+            } else if (
+                (playerChoice === "rock" && computerChoice === "scissors") ||
+                (playerChoice === "paper" && computerChoice === "rock") ||
+                (playerChoice === "scissors" && computerChoice === "paper")
+            ) {
+                resultText.textContent = "You win!";
+                playerWins++;
+                showFireworks();
+            } else {
+                resultText.textContent = "You lose!";
+            }
+            
+            round++;
+            if (round <= 3) {
+                roundText.textContent = `Round: ${round} / 3`;
+            } else {
+                alert(`Game Over! You won ${playerWins} out of 3 rounds.`);
+				top.location.reload();
+            }
+        }
+
+        function showFireworks() {
+            const canvas = document.getElementById("fireworks");
+            const ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    ctx.beginPath();
+                    ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>
