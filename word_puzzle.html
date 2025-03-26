@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Puzzle Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(10, 40px); gap: 5px; justify-content: center; }
+        .cell { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+                border: 1px solid black; font-size: 20px; cursor: pointer; user-select: none; }
+        .highlight { background-color: yellow; }
+    </style>
+</head>
+<body>
+    <h1>Word Puzzle Game</h1>
+    <div class="grid" id="grid"></div>
+    <h2>Words to Find:</h2>
+    <p id="word-list"></p>
+    
+    <script>
+        const allWords = ["CAT", "DOG", "BAT", "SUN", "MOON", "CAR", "BUS", "PEN", "HAT", "RAT",
+                          "BOX", "FOX", "LOG", "POT", "TOP", "NET", "JET", "MAP", "TAP", "ZIP",
+                          "TREE", "ROCK", "FISH", "BIRD", "LAMP", "BOOK", "DOOR", "CHAIR", "TABLE", "SHOE",
+                          "LION", "TIGER", "BEAR", "WOLF", "DEER", "HORSE", "SNAKE", "EAGLE", "FROG", "MOUSE",
+                          "PLANE", "TRAIN", "BOAT", "HOUSE", "BRIDGE", "CLOUD", "RIVER", "MOUNTAIN", "OCEAN", "VALLEY",
+                          "APPLE", "ORANGE", "GRAPE", "BERRY", "PEACH", "PLUM", "MANGO", "LEMON", "OLIVE", "BANANA",
+                          "CANDLE", "GUITAR", "VIOLIN", "DRUM", "TRUMPET", "FLUTE", "PAINT", "BRUSH", "PENCIL", "ERASER",
+                          "WINDOW", "FLOOR", "CEILING", "WALL", "FENCE", "GARDEN", "PARK", "STREET", "ALLEY", "TUNNEL",
+                          "CLOUDY", "RAINY", "SUNNY", "WINDY", "STORMY", "FOGGY", "SNOWY", "HOT", "COLD", "WARM" ];
+        
+        const words = [];
+        while (words.length < 10) {
+            let word = allWords[Math.floor(Math.random() * allWords.length)];
+            if (!words.includes(word)) words.push(word);
+        }
+        
+        const gridSize = 10;
+        let gridArray = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
+        let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        let foundWords = new Set();
+
+        function placeWord(word) {
+            let placed = false;
+            while (!placed) {
+                let direction = Math.floor(Math.random() * 3); // 0 = horizontal, 1 = vertical, 2 = diagonal
+                let row = Math.floor(Math.random() * gridSize);
+                let col = Math.floor(Math.random() * gridSize);
+                
+                if (direction === 0 && col + word.length <= gridSize) {
+                    if (word.split('').every((char, i) => gridArray[row][col + i] === '' || gridArray[row][col + i] === char)) {
+                        word.split('').forEach((char, i) => gridArray[row][col + i] = char);
+                        placed = true;
+                    }
+                } else if (direction === 1 && row + word.length <= gridSize) {
+                    if (word.split('').every((char, i) => gridArray[row + i][col] === '' || gridArray[row + i][col] === char)) {
+                        word.split('').forEach((char, i) => gridArray[row + i][col] = char);
+                        placed = true;
+                    }
+                } else if (direction === 2 && row + word.length <= gridSize && col + word.length <= gridSize) {
+                    if (word.split('').every((char, i) => gridArray[row + i][col + i] === '' || gridArray[row + i][col + i] === char)) {
+                        word.split('').forEach((char, i) => gridArray[row + i][col + i] = char);
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        function fillGrid() {
+            words.forEach(placeWord);
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (gridArray[i][j] === '') {
+                        gridArray[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+        }
+
+        function createGrid() {
+            fillGrid();
+            const grid = document.getElementById("grid");
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.textContent = gridArray[i][j];
+                    cell.addEventListener("click", () => selectLetter(cell));
+                    grid.appendChild(cell);
+                }
+            }
+            document.getElementById("word-list").textContent = words.join(", ");
+        }
+
+        let selectedWord = "";
+        function selectLetter(cell) {
+            selectedWord += cell.textContent;
+            cell.classList.add("highlight");
+            checkWord();
+        }
+
+        function checkWord() {
+            if (words.includes(selectedWord) && !foundWords.has(selectedWord)) {
+                //alert(`You found: ${selectedWord}!`);
+                foundWords.add(selectedWord);
+                selectedWord = "";
+                
+                if (foundWords.size === words.length)
+				{
+					alert("Congratulations");
+				 }
+            }
+        }
+
+        createGrid();
+    </script>
+</body>
+</html>

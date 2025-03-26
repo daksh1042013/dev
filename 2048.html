@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .grid {
+            width: 400px;
+            height: 400px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 10px;
+            background-color: #aad4f5;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .tile {
+            width: 90px;
+            height: 90px;
+            background-color: red;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border-radius: 5px;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="score" id="score">Score: 0</div>
+    <div class="grid" id="grid"></div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const grid = document.getElementById("grid");
+            const scoreDisplay = document.getElementById("score");
+            let tiles = [];
+            let draggedTile = null;
+            let draggedIndex = -1;
+            
+            function createGrid() {
+                for (let i = 0; i < 16; i++) {
+                    let tile = document.createElement("div");
+                    tile.classList.add("tile");
+                    let num = Math.random() > 0.8 ? 2 : "";
+                    tile.textContent = num;
+                    tile.draggable = num !== "";
+                    
+                    tile.addEventListener("dragstart", (e) => {
+                        if (tile.textContent) {
+                            draggedTile = tile;
+                            draggedIndex = i;
+                            e.dataTransfer.setData("text", tile.textContent);
+                        }
+                    });
+                    
+                    tile.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                    });
+                    
+                    tile.addEventListener("drop", (e) => {
+                        e.preventDefault();
+                        let targetIndex = tiles.indexOf(tile);
+                        if (draggedTile && draggedTile !== tile && isAdjacent(draggedIndex, targetIndex)) {
+                            if (tile.textContent === draggedTile.textContent) {
+                                tile.textContent = parseInt(tile.textContent) * 2;
+                                draggedTile.textContent = "";
+                                updateScore();
+                            } else if (tile.textContent === "") {
+                                tile.textContent = draggedTile.textContent;
+                                draggedTile.textContent = "";
+                                draggedTile.draggable = false;
+                            }
+                            
+                            // Ensure all tiles remain draggable if they contain a number
+                            tiles.forEach(t => {
+                                t.draggable = t.textContent !== "";
+                            });
+                            
+                            // Add a new number in the original position
+                            draggedTile.textContent = Math.random() > 0.5 ? 2 : 4;
+                            draggedTile.draggable = true;
+                            updateScore();
+                        }
+                    });
+                    
+                    grid.appendChild(tile);
+                    tiles.push(tile);
+                }
+                updateScore();
+            }
+            
+            function isAdjacent(index1, index2) {
+                const row1 = Math.floor(index1 / 4);
+                const col1 = index1 % 4;
+                const row2 = Math.floor(index2 / 4);
+                const col2 = index2 % 4;
+                return (Math.abs(row1 - row2) === 1 && col1 === col2) || (Math.abs(col1 - col2) === 1 && row1 === row2);
+            }
+            
+            function updateScore() {
+                let highestValue = Math.max(...tiles.map(t => parseInt(t.textContent) || 0));
+                scoreDisplay.textContent = `Score: ${highestValue}`;
+            }
+            
+            createGrid();
+        });
+    </script>
+</body>
+</html>
