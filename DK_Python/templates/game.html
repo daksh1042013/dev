@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> DK Multiplication Game</title>
+</head>
+<body>
+<h1>Multiplication Game</h1>
+<p>Score: {{ score }}</p>
+<p>Lives: {{ lives }}</p>
+<p>Solve: {{ a }} x {{ b }}</p>
+<form method="post">
+    <input type="number" name="product" required autofocus>
+    <button type="submit">Submit</button>
+</form>
+<p>{{ message }}</p>
+</body>
+</html>
