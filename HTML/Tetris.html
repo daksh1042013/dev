@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <style>
+        body {
+            background-color: lightblue;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        canvas {
+            background-color: white;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="tetris" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById("tetris");
+        const ctx = canvas.getContext("2d");
+        const ROWS = 20;
+        const COLS = 10;
+        const BLOCK_WIDTH = canvas.width / COLS;
+        const BLOCK_HEIGHT = canvas.height / ROWS;
+        const board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        let score = 0;
+        
+        const SHAPES = [
+            [[1, 1, 1, 1]], // I
+            [[1, 1], [1, 1]], // O
+            [[0, 1, 0], [1, 1, 1]], // T
+            [[1, 1, 0], [0, 1, 1]], // Z
+            [[0, 1, 1], [1, 1, 0]], // S
+            [[1, 1, 1], [1, 0, 0]], // L
+            [[1, 1, 1], [0, 0, 1]] // J
+        ];
+
+        function getRandomShape() {
+            return SHAPES[Math.floor(Math.random() * SHAPES.length)];
+        }
+        
+        let currentPiece = { shape: getRandomShape(), x: 3, y: 0 };
+        
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            board.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        ctx.fillStyle = "red";
+                        ctx.fillRect(x * BLOCK_WIDTH, y * BLOCK_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT);
+                        ctx.strokeRect(x * BLOCK_WIDTH, y * BLOCK_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    }
+                });
+            });
+            drawPiece();
+        }
+        
+        function drawPiece() {
+            ctx.fillStyle = "red";
+            currentPiece.shape.forEach((row, dy) => {
+                row.forEach((cell, dx) => {
+                    if (cell) {
+                        ctx.fillRect((currentPiece.x + dx) * BLOCK_WIDTH, (currentPiece.y + dy) * BLOCK_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT);
+                        ctx.strokeRect((currentPiece.x + dx) * BLOCK_WIDTH, (currentPiece.y + dy) * BLOCK_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT);
+                    }
+                });
+            });
+        }
+
+        function canMove(newX, newY, shape) {
+            return shape.every((row, dy) => 
+                row.every((cell, dx) => 
+                    !cell || (newX + dx >= 0 && newX + dx < COLS && newY + dy < ROWS && !board[newY + dy][newX + dx])
+                )
+            );
+        }
+
+        function movePiece(dir) {
+            if (canMove(currentPiece.x + dir, currentPiece.y, currentPiece.shape)) {
+                currentPiece.x += dir;
+                drawBoard();
+            }
+        }
+
+        function rotatePiece() {
+            const newShape = currentPiece.shape[0].map((_, i) => currentPiece.shape.map(row => row[i]).reverse());
+            if (canMove(currentPiece.x, currentPiece.y, newShape)) {
+                currentPiece.shape = newShape;
+                drawBoard();
+            }
+        }
+        
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") movePiece(-1);
+            if (event.key === "ArrowRight") movePiece(1);
+            if (event.key === "ArrowUp") rotatePiece();
+        });
+        
+        function checkLines() {
+            for (let y = ROWS - 1; y >= 0; y--) {
+                if (board[y].every(cell => cell !== 0)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(COLS).fill(0));
+                    score += 10;
+                    console.log("Score:", score);
+                }
+            }
+        }
+        
+        function placeBlock() {
+            currentPiece.shape.forEach((row, dy) => {
+                row.forEach((cell, dx) => {
+                    if (cell) {
+                        board[currentPiece.y + dy][currentPiece.x + dx] = 1;
+                    }
+                });
+            });
+            checkLines();
+            currentPiece = { shape: getRandomShape(), x: 3, y: 0 };
+            if (!canMove(currentPiece.x, currentPiece.y, currentPiece.shape)) {
+                alert("Game Over");
+                location.reload();
+            }
+            drawBoard();
+        }
+        
+        setInterval(() => {
+            if (canMove(currentPiece.x, currentPiece.y + 1, currentPiece.shape)) {
+                currentPiece.y++;
+            } else {
+                placeBlock();
+            }
+            drawBoard();
+        }, 500);
+
+        drawBoard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snakes and Ladders</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { background: url('Snake_Ladder.jpg') no-repeat center/contain; display: block; margin: 0 auto; }
+        .dice-btn { font-size: 20px; padding: 10px; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Snakes and Ladders</h1>
+    <canvas id="gameBoard" width="485" height="500"></canvas>
+    <br>
+    <button class="dice-btn" onclick="rollDice()">Roll Dice</button>
+    <p id="diceResult">Roll the dice to start</p>
+    
+    <script>
+        const canvas = document.getElementById("gameBoard");
+        const ctx = canvas.getContext("2d");
+        let players = [1, 1];
+        let currentPlayer = 0;
+        const tileSize = 48.5;
+        const boardSize = 10;
+        
+        const snakes = { 98: 8,92: 53, 62: 57, 56: 15, 51: 11 };
+        const ladders = { 2: 38, 4: 14, 9: 31, 33: 85, 52: 88, 80: 99 };
+        
+        function rollDice() {
+            let dice = Math.floor(Math.random() * 6) + 1;
+            document.getElementById("diceResult").innerText = `Player ${currentPlayer + 1} rolled: ${dice}`;
+            movePlayer(dice);
+        }
+        
+        function movePlayer(dice) {
+            players[currentPlayer] += dice;
+            if (players[currentPlayer] in snakes) players[currentPlayer] = snakes[players[currentPlayer]];
+            if (players[currentPlayer] in ladders) players[currentPlayer] = ladders[players[currentPlayer]];
+            if (players[currentPlayer] >= 100) {
+                document.getElementById("diceResult").innerText = `Player ${currentPlayer + 1} wins!`;
+                return;
+            }
+            currentPlayer = (currentPlayer + 1) % 2;
+            drawPlayers();
+        }
+        
+        function drawPlayers() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            players.forEach((pos, index) => {
+                let row = Math.floor((pos - 1) / boardSize);
+                let col = (pos - 1) % boardSize;
+                if (row % 2 === 1) col = boardSize - 1 - col; // Reverse for even rows
+                let x = col * tileSize + tileSize / 2;
+                let y = canvas.height - (row * tileSize + tileSize / 2);
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 15, 0, Math.PI * 2);
+                ctx.fillStyle = index === 0 ? "lightblue" : "lightgreen";
+                ctx.fill();
+            });
+        }
+        
+        drawPlayers();
+    </script>
+</body>
+</html>
