@@ -16,6 +16,7 @@ import glob
 import urllib.request
 import subprocess
 import shutil
+import pygame
 
 
 def _wav_files_for(kind: str):
@@ -111,7 +112,6 @@ def play_mp3(path: str):
 	"""Play an mp3 using `playsound` if available, otherwise open with the OS default player."""
 	# Prefer in-process playback using pygame (doesn't spawn external player)
 	try:
-		import pygame
 		# initialize mixer if not already
 		try:
 			if not pygame.mixer.get_init():
