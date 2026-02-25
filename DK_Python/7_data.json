@@ -1,0 +1,18 @@
+{
+  "Types": [
+    {
+      "Type": {
+        "Name": "Wheel",
+        "Revision": "A",
+        "Material": "Wire"
+      }
+    },
+    {
+      "Type": {
+        "Name": "Wheel",
+        "Revision": "B",
+        "Material": "Alloy"
+      }
+    }
+  ]
+}

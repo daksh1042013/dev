@@ -1,0 +1,12 @@
+<Types>
+   <Type name="Part">
+      <Attribute name="Name">Wheel</Attribute>
+      <Attribute name="Revision">A</Attribute>
+      <Attribute name="Material">Wire</Attribute>
+   </Type>
+   <Type name="Part">
+      <Attribute name="Name">Wheel</Attribute>
+      <Attribute name="Revision">B</Attribute>
+      <Attribute name="Material">Alloy</Attribute>
+   </Type>
+</Types>
