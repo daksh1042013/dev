@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bohr Atomic Model</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Controls Header */
+    .controls {
+      position: absolute;
+      top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      padding: 20px 32px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      z-index: 10;
+    }
+
+    .element-info {
+      text-align: center;
+    }
+
+    .element-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #0284c7;
+    }
+
+    .element-details {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    input[type="range"] {
+      accent-color: #0284c7;
+      cursor: pointer;
+      width: 180px;
+    }
+
+    /* Atom Viewport - Perfect Center Box */
+    .viewport {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Nucleus centered exactly */
+    .nucleus {
+      position: absolute;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ef4444, #dc2626);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: bold;
+      z-index: 10;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
+    }
+
+    /* Orbit Container */
+    #orbits-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+    }
+
+    /* Orbit Rings - Concentric Centered */
+    .orbit {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    /* Shell Diameters */
+    .shell-1 {
+      width: 140px;
+      height: 140px;
+    }
+
+    .shell-2 {
+      width: 260px;
+      height: 260px;
+    }
+
+    .shell-3 {
+      width: 380px;
+      height: 380px;
+    }
+
+    /* Static Electrons Centered Relative to Orbit Center */
+    .electron {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      background: #0284c7;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <div class="element-info">
+      <div class="element-name" id="element-name">Hydrogen</div>
+      <div class="element-details" id="element-details">Atomic Number: 1 | Total Electrons: 1</div>
+    </div>
+    <div class="slider-container">
+      <label for="atomic-slider">Z = 1</label>
+      <input type="range" id="atomic-slider" min="1" max="10" value="1" />
+      <label for="atomic-slider">10</label>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <div class="nucleus" id="nucleus">1P</div>
+    <div id="orbits-container"></div>
+  </div>
+
+  <script>
+    const ELEMENTS = [
+      { z: 1, name: "Hydrogen", symbol: "H" },
+      { z: 2, name: "Helium", symbol: "He" },
+      { z: 3, name: "Lithium", symbol: "Li" },
+      { z: 4, name: "Beryllium", symbol: "Be" },
+      { z: 5, name: "Boron", symbol: "B" },
+      { z: 6, name: "Carbon", symbol: "C" },
+      { z: 7, name: "Nitrogen", symbol: "N" },
+      { z: 8, name: "Oxygen", symbol: "O" },
+      { z: 9, name: "Fluorine", symbol: "F" },
+      { z: 10, name: "Neon", symbol: "Ne" }
+    ];
+
+    const SHELL_CAPACITIES = [2, 8, 18];
+    const SHELL_RADII = [70, 130, 190]; // Radius in pixels
+
+    const slider = document.getElementById("atomic-slider");
+    const nameEl = document.getElementById("element-name");
+    const detailsEl = document.getElementById("element-details");
+    const nucleusEl = document.getElementById("nucleus");
+    const orbitsContainer = document.getElementById("orbits-container");
+
+    function renderAtom(atomicNumber) {
+      const element = ELEMENTS.find(e => e.z === atomicNumber);
+      
+      nameEl.textContent = `${element.name} (${element.symbol})`;
+      detailsEl.textContent = `Atomic Number: ${element.z} | Total Electrons: ${element.z}`;
+      nucleusEl.textContent = `${element.z}P`;
+
+      orbitsContainer.innerHTML = "";
+
+      let remainingElectrons = atomicNumber;
+      let shellIndex = 0;
+
+      while (remainingElectrons > 0 && shellIndex < SHELL_CAPACITIES.length) {
+        const countInShell = Math.min(remainingElectrons, SHELL_CAPACITIES[shellIndex]);
+        remainingElectrons -= countInShell;
+
+        // Create orbit ring
+        const orbit = document.createElement("div");
+        orbit.className = `orbit shell-${shellIndex + 1}`;
+
+        const radius = SHELL_RADII[shellIndex];
+
+        // Place electrons symmetrically centered on orbit path
+        for (let i = 0; i < countInShell; i++) {
+          const angle = (i / countInShell) * (2 * Math.PI) - (Math.PI / 2); // Start top (-90 deg)
+          const x = radius * Math.cos(angle);
+          const y = radius * Math.sin(angle);
+
+          const electron = document.createElement("div");
+          electron.className = "electron";
+          // Offset translation by -50% to align electron center on orbit point
+          electron.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+
+          orbit.appendChild(electron);
+        }
+
+        orbitsContainer.appendChild(orbit);
+        shellIndex++;
+      }
+    }
+
+    slider.addEventListener("input", (e) => {
+      renderAtom(parseInt(e.target.value, 10));
+    });
+
+    renderAtom(1);
+  </script>
+</body>
+</html>
