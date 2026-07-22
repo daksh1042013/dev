@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Light Reflection & Refraction Simulation</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      background: #ffffff;
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      max-width: 950px;
+      width: 100%;
+    }
+    h2 {
+      margin-top: 0;
+      color: #1e293b;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+      background: #f8fafc;
+      padding: 16px 20px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #475569;
+    }
+    input[type=range] {
+      accent-color: #0284c7;
+    }
+    /* Main Layout: Canvas on Left, Calculations Panel on Right */
+    .sim-layout {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 20px;
+      align-items: start;
+    }
+    canvas {
+      border-radius: 10px;
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      display: block;
+      width: 100%;
+    }
+    .readout-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .stat-card {
+      background: #ffffff;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .val-incident { color: #dc2626; }
+    .val-reflected { color: #ea580c; }
+    .val-refracted { color: #16a34a; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Light Reflection & Refraction Simulator</h2>
+  
+  <div class="controls">
+    <div class="control-group">
+      <label for="laserY">Laser Position (Up / Down)</label>
+      <input type="range" id="laserY" min="50" max="350" value="100">
+    </div>
+    <div class="control-group">
+      <!-- Replaced $n_2$ with standard HTML subscript -->
+      <label for="glassN">Glass Refractive Index (n<sub>2</sub>)</label>
+      <input type="range" id="glassN" min="1.0" max="2.0" step="0.05" value="1.5">
+    </div>
+  </div>
+
+  <div class="sim-layout">
+    <!-- Left: Canvas -->
+    <canvas id="opticsCanvas" width="600" height="400"></canvas>
+
+    <!-- Right: Calculation Statistics -->
+    <div class="readout-panel">
+      <h3 style="margin:0; font-size:1rem; color:#334155;">Calculations</h3>
+      
+      <!-- Replaced LaTeX math formatting with standard HTML sub elements -->
+      <div class="stat-card">
+        <div class="stat-label">Incident Angle (&theta;<sub>i</sub>)</div>
+        <div id="angInc" class="stat-val val-incident">0°</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Reflected Angle (&theta;<sub>r</sub>)</div>
+        <div id="angRefl" class="stat-val val-reflected">0°</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">Refracted Angle (&theta;<sub>2</sub>)</div>
+        <div id="angRefr" class="stat-val val-refracted">0°</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const canvas = document.getElementById('opticsCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const laserYInput = document.getElementById('laserY');
+  const glassNInput = document.getElementById('glassN');
+
+  const targetX = canvas.width / 2; // Surface boundary line
+  const targetY = canvas.height / 2; // Fixed target point on glass interface
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const laserX = 50;
+    const laserY = parseFloat(laserYInput.value);
+    const n1 = 1.0; // Air
+    const n2 = parseFloat(glassNInput.value);
+
+    // 1. Draw Media Backgrounds
+    // Air (Left)
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(0, 0, targetX, canvas.height);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Medium 1: Air (n = 1.0)', 15, 25);
+
+    // Glass (Right)
+    ctx.fillStyle = 'rgba(224, 242, 254, 0.7)';
+    ctx.fillRect(targetX, 0, canvas.width - targetX, canvas.height);
+    ctx.fillStyle = '#0284c7';
+    ctx.fillText(`Medium 2: Glass (n = ${n2.toFixed(2)})`, targetX + 15, 25);
+
+    // Interface boundary line
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(targetX, 0);
+    ctx.lineTo(targetX, canvas.height);
+    ctx.stroke();
+
+    // 2. Normal Line (Horizontal dashed line)
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.beginPath();
+    ctx.moveTo(80, targetY);
+    ctx.lineTo(canvas.width - 80, targetY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 3. Math Calculations
+    const dx = targetX - laserX;
+    const dy = targetY - laserY;
+    const thetaI = Math.atan2(Math.abs(dy), dx); // Incident angle relative to normal
+
+    // Snell's Law
+    const sinTheta2 = (n1 * Math.sin(thetaI)) / n2;
+    const theta2 = Math.asin(Math.min(1, sinTheta2)); // Refracted angle
+
+    // 4. Draw Rays
+    // Incident Ray (Red)
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(laserX, laserY);
+    ctx.lineTo(targetX, targetY);
+    ctx.stroke();
+
+    // Reflected Ray (Orange/Red dashed back into Air)
+    const reflLen = 250;
+    const reflY = laserY < targetY ? targetY + Math.tan(thetaI) * reflLen : targetY - Math.tan(thetaI) * reflLen;
+    ctx.strokeStyle = '#ea580c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY);
+    ctx.lineTo(targetX - reflLen, reflY);
+    ctx.stroke();
+
+    // Refracted Ray (Green into Glass)
+    const refrLen = 250;
+    const dyRefr = Math.tan(theta2) * refrLen;
+    const refrY = laserY < targetY ? targetY + dyRefr : targetY - dyRefr;
+    ctx.strokeStyle = '#16a34a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(targetX, targetY);
+    ctx.lineTo(targetX + refrLen, refrY);
+    ctx.stroke();
+
+    // 5. Draw Laser Pointer Box
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(laserX - 30, laserY - 10, 30, 20);
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(laserX - 2, laserY - 4, 4, 8);
+
+    // 6. Update Numerical Displays on Right
+    const degI = (thetaI * 180 / Math.PI).toFixed(1);
+    const deg2 = (theta2 * 180 / Math.PI).toFixed(1);
+
+    document.getElementById('angInc').innerText = `${degI}°`;
+    document.getElementById('angRefl').innerText = `${degI}°`;
+    document.getElementById('angRefr').innerText = `${deg2}°`;
+  }
+
+  laserYInput.addEventListener('input', draw);
+  glassNInput.addEventListener('input', draw);
+  draw();
+</script>
+
+</body>
+</html>
